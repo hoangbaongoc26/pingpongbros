@@ -1,0 +1,23 @@
+node_modules/
+dist/
+.vite/
+.env
+.env.local
+backend/.env
+frontend/.env
+coverage/
+.DS_Store
+# Environment
+**/.env
+**/.env.*
+!**/.env.example
+
+# Dependencies
+**/node_modules/
+
+# Build
+**/dist/
+
+# Runtime data
+backend/data/store.json
+
