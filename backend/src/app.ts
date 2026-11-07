@@ -132,27 +132,56 @@ app.post('/api/dang-nhap', handleLogin);
 const otpStore = new Map<string, { otp: string; expiresAt: number; name: string }>();
 
 // API gửi mã OTP về email đăng ký
+
 app.post(['/api/auth/send-otp', '/api/gui-otp'], async (req, res) => {
   const { email, ho_ten } = req.body ?? {};
+
   if (!email || !String(email).includes('@')) {
-    return res.status(400).json({ message: 'Vui lòng cung cấp địa chỉ email hợp lệ để nhận mã OTP.' });
+    return res.status(400).json({
+      ok: false,
+      message: 'Vui lòng cung cấp địa chỉ email hợp lệ để nhận mã OTP.',
+    });
   }
 
   const cleanEmail = String(email).toLowerCase().trim();
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  otpStore.set(cleanEmail, {
-    otp,
-    expiresAt: Date.now() + 5 * 60 * 1000, // 5 phút
-    name: String(ho_ten || 'Quý khách'),
-  });
+  const name = String(ho_ten || 'Quý khách');
 
-  const sendRes = await sendOtpEmail(cleanEmail, otp, String(ho_ten || 'Quý khách'));
-  res.json({
-    ok: true,
-    message: `Mã xác thực OTP đã được gửi về email ${cleanEmail}. Vui lòng kiểm tra hộp thư đến.`,
-    sendResult: sendRes,
-  });
+  try {
+    const sendRes = await sendOtpEmail(cleanEmail, otp, name);
+
+    if (!sendRes.success) {
+      otpStore.delete(cleanEmail);
+
+      return res.status(500).json({
+        ok: false,
+        message: sendRes.message,
+      });
+    }
+
+    // Chỉ lưu OTP khi email đã gửi thành công
+    otpStore.set(cleanEmail, {
+      otp,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+      name,
+    });
+
+    return res.json({
+      ok: true,
+      message: `Mã xác thực OTP đã được gửi về email ${cleanEmail}. Vui lòng kiểm tra hộp thư đến.`,
+      sendResult: sendRes,
+    });
+  } catch (error) {
+    otpStore.delete(cleanEmail);
+    console.error('[OTP] Error:', error);
+
+    return res.status(500).json({
+      ok: false,
+      message: 'Không thể gửi email OTP. Vui lòng thử lại sau.',
+    });
+  }
 });
+
 
 app.post(['/api/dang-ky', '/api/auth/register'], (req, res) => {
   const { ho_ten, sdt, email, mat_khau, vai_tro, otp } = req.body ?? {};

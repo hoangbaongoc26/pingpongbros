@@ -9,7 +9,7 @@ export interface EmailLog {
   to: string;
   subject: string;
   sentAt: string;
-  status: 'SENT' | 'SIMULATED' | 'FAILED';
+status: 'SENT' | 'SIMULATED' | 'FAILED';
   preview: string;
 }
 
@@ -250,25 +250,46 @@ export async function sendOtpEmail(email: string, otp: string, customerName: str
     to: email,
     subject,
     sentAt: new Date().toISOString(),
-    status: hasSmtpCredentials ? 'SENT' : 'SIMULATED',
+    status: 'FAILED',
     preview: `Mã OTP ${otp} cho ${customerName} (${email})`,
   });
 
-  if (transporter && hasSmtpCredentials) {
-    try {
-      console.log(`[SMTP] Sending OTP ${otp} to ${email}...`);
-      await transporter.sendMail({
-        from: smtpFrom,
-        to: email,
-        subject,
-        html: htmlContent,
-      });
-      console.log(`[SMTP] Successfully delivered OTP email to ${email}!`);
-      return { success: true, message: `Đã gửi mã OTP đến ${email}` };
-    } catch (err: any) {
-      console.warn(`[SMTP Warning] Error delivering OTP to ${email}:`, err?.message || err);
-    }
-  }
-
-  return { success: true, message: `Đã tạo mã OTP cho ${email} (Outbox sẵn sàng)` };
+    if (!transporter || !hasSmtpCredentials) {
+  console.error('[SMTP] Chưa cấu hình đầy đủ thông tin SMTP.');
+  return {
+    success: false,
+    message: 'Máy chủ email chưa được cấu hình. Vui lòng thử lại sau.',
+  };
 }
+
+try {
+  console.log(`[SMTP] Sending OTP to ${email}...`);
+
+  const info = await transporter.sendMail({
+    from: smtpFrom,
+    to: email,
+    subject,
+    html: htmlContent,
+  });
+
+  const lastEmail = emailOutbox[emailOutbox.length - 1];
+  if (lastEmail) lastEmail.status = 'SENT';
+
+  console.log(`[SMTP] Successfully delivered OTP to ${email}! MessageId: ${info.messageId}`);
+
+  return {
+    success: true,
+    message: `Đã gửi mã OTP đến ${email}`,
+  };
+} catch (err: any) {
+  const lastEmail = emailOutbox[emailOutbox.length - 1];
+  if (lastEmail) lastEmail.status = 'FAILED';
+
+  console.error('[SMTP] Error delivering OTP:', err?.message || err);
+
+  return {
+    success: false,
+    message: 'Không thể gửi email OTP. Vui lòng thử lại sau.',
+  };
+}
+  }
