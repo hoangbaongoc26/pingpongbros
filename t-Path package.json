@@ -1,0 +1,15 @@
+* [33mb8c6f64[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Prepare project for deployment
+[31m|[m * [33m9431e0c[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Delete render.yaml
+[31m|[m * [33m8b690bf[m Delete package.json
+[31m|[m * [33mf1b1fee[m Delete README.md
+[31m|[m * [33m4eb1642[m Delete PingPongBros_chatbot_thong_minh (3).html
+[31m|[m * [33mbe21404[m Delete .gitignore
+[31m|[m * [33md0b0ec3[m Delete frontend directory
+[31m|[m * [33m97cccb4[m Delete database directory
+[31m|[m * [33me46a5cf[m Delete backend directory
+[31m|[m * [33mc3a288c[m Delete Tài liệu directory
+[31m|[m[31m/[m  
+*   [33m1691d3f[m Merge remote repository
+[33m|[m[34m\[m  
+[33m|[m * [33m601f28d[m Initial commit
+* [33m44edd39[m Initial commit PingPongBros
